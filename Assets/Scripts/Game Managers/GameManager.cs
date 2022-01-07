@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,10 +12,12 @@ public class GameManager : MonoBehaviour
     public GameObject Deck;
     public GameObject ChooseColor;
     public GameObject OnTurnArrow;
+    public GameObject[] DeclareLastCards;
 
     private ResourcesManager rm;
     private Logic GameLogic;
     private CardDisplay LastPlayedCardDisplay;
+    private int[] Scores;
 
     // Start is called before the first frame update
     void Start()
@@ -45,14 +48,16 @@ public class GameManager : MonoBehaviour
         {
             Players[player].GameManager = this;
 
-            DisplayPlayerCards(player);
+            // DisplayPlayerCards(player);
         }
+
+        NewGame();
 
         Debug.Log("To play = " + GameLogic.OnTurn);
         Debug.Log("Last played = " + GameLogic.LastPlayedCard);
 
-        // Display last played
-        UpdateLastPlayedCard();
+        // Scoreboard
+        Scores = new int[4];
     }
 
     // Update is called once per frame
@@ -61,12 +66,25 @@ public class GameManager : MonoBehaviour
         
     }
 
+    public void NewGame()
+    {
+        GameLogic.NewGame();
+
+        for (int player = 0; player < GameLogic.NumPlayers; player++)
+            UpdatePlayerHand(player);
+
+        // Display last played
+        UpdateLastPlayedCard();
+
+        // Update arrow
+        SetArrowDirection(GameLogic.OnTurn);
+    }
+
     private void DisplayPlayerCards(int player)
     {
         foreach (Card card in GameLogic.PlayerHands[player])
         {
-            GameObject go = rm.GetCardPrefab(card.Id, CardPrefab, PlayerHands[player].transform, Players[player]);
-            Debug.Log(card + " " + go.GetComponent<CardDisplay>().Card);
+            _ = rm.GetCardPrefab(card.Id, CardPrefab, PlayerHands[player].transform, Players[player]);
         }
     }
 
@@ -94,15 +112,38 @@ public class GameManager : MonoBehaviour
         rm.UpdateCardDisplay(LastPlayedCardDisplay, cardId);
     }
 
+    private void SetArrowDirection(int player)
+    {
+        OnTurnArrow.transform.eulerAngles = new Vector3(
+            OnTurnArrow.transform.eulerAngles.x,
+            OnTurnArrow.transform.eulerAngles.y,
+            -(player + 1) * 90
+        );
+    }
+
+    private void UpdateScoreboard(int[] scores)
+    {
+        for (int player = 0; player < GameLogic.NumPlayers; player++)
+        {
+            Scores[player] += scores[player];
+            Debug.Log("Player " + player + ": " + scores[player] + " -> " + Scores[player]);
+        }
+    }
+
     public void MakeMove(int player, int move)
     {
         Card card = null;
         if (move < 200)
             card = GameLogic.PlayerHands[player][move];
 
-        MakeMoveResult moveResult = GameLogic.MakeMove(player, move);
+        int moveModifiers = DeclareLastCards[player].GetComponent<Toggle>().isOn ? Constants.DeclareLastCardMove : 0;
+        Debug.Log("Player move: " + (move + moveModifiers));
+        MakeMoveResult moveResult = GameLogic.MakeMove(player, move + moveModifiers);
         if (moveResult.IsValid)
         {
+            if (moveModifiers > 0)
+                DeclareLastCards[player].GetComponent<Toggle>().isOn = false;
+
             Debug.Log("Move (" + player + "," + move + "," + card + ") is VALID");
             if (moveResult.MoveType == MoveType.PlayedCard)
             {
@@ -127,16 +168,13 @@ public class GameManager : MonoBehaviour
             if (moveResult.IsOver)
             {
                 Debug.Log("Winner = " + moveResult.Winner);
-                for (int i = 0; i < GameLogic.NumPlayers; i++)
-                    Debug.Log(moveResult.Scores[i]);
+                UpdateScoreboard(moveResult.Scores);
+
+                NewGame();
             }
             else
             {
-                OnTurnArrow.transform.eulerAngles = new Vector3(
-                    OnTurnArrow.transform.eulerAngles.x,
-                    OnTurnArrow.transform.eulerAngles.y,
-                    -(GameLogic.OnTurn + 1) * 90
-                );
+                SetArrowDirection(GameLogic.OnTurn);
             }
         }
         else

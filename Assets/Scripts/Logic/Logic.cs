@@ -15,6 +15,7 @@ public class Logic
     public List<Card>[] PlayerHands;
     public List<Card> PlayedCards;
     public Card LastPlayedCard;
+    public CardColor CurColor;
     public int NumPlayers, Dealer, OnTurn, Delta, NumToDraw;
     public int[] Scores;
     public bool ChooseColor;
@@ -31,10 +32,10 @@ public class Logic
         NumIlegalMoveDraw = logicSettings.NumIlegalMoveDraw;
 
         SetupDeck();
-        NewGame();
+        // NewGame();
     }
 
-    private void NewGame()
+    public void NewGame()
     {
         PlayerHands = new List<Card>[NumPlayers];
         for (int i = 0; i < NumPlayers; i++)
@@ -59,6 +60,34 @@ public class Logic
         int move = PlayerHands[OnTurn].FindIndex(x => x.Color == card.Color && x.ValueType == card.ValueType);
         MakeMove(OnTurn, move);
         PlayedCards.RemoveAt(0); // Remove null from PlayedCards
+    }
+
+    private MakeMoveResult EndGame(int winner)
+    {
+        // Get player scores
+        int[] scores = new int[NumPlayers];
+        for (int player = 0; player < NumPlayers; player++)
+            scores[player] = GetPlayerScore(player);
+
+        // Add cards from PlayedCards to Deck
+        foreach (Card card in PlayedCards)
+            Deck.Add(card);
+        Deck.Add(LastPlayedCard);
+
+        // Add cards from player hands to Deck
+        foreach (List<Card> playerHand in PlayerHands)
+            foreach (Card card in playerHand)
+                Deck.Add(card);
+
+        // Update dealer
+        Dealer++;
+
+        return new MakeMoveResult(true, MoveType.PlayedCard)
+        {
+            IsOver = true,
+            Winner = winner,
+            Scores = scores
+        };
     }
 
     private void SetupDeck()
@@ -151,20 +180,6 @@ public class Logic
         return score;
     }
 
-    private MakeMoveResult EndGame(int winner)
-    {
-        int[] scores = new int[NumPlayers];
-        for (int player = 0; player < NumPlayers; player++)
-            scores[player] = GetPlayerScore(player);
-
-        return new MakeMoveResult(true, MoveType.PlayedCard)
-        {
-            IsOver = true,
-            Winner = winner,
-            Scores = scores
-        };
-    }
-
     private void ClearMove()
     {
         BlockedPlayer = -1;
@@ -175,38 +190,49 @@ public class Logic
     {
         if (LastPlayedCard == null)
             return true;
-        else if (player == BlockedPlayer || (ChooseColor && player != OnTurn) || (ChooseColor && (move < Constants.ChooseColorMove || move >= Constants.ChooseColorMove + 4)))
-        {
-            return false;
-        }
-        else if (move == Constants.DrawCardMove)
-        {
-            // Draw card
-            return player == OnTurn;
-        }
-        else if (move == Constants.DeclareLastCardMove)
-        {
-            // Declare last card
-            return player == OnTurn && !DeclaredUno[player];
-        }
-        else if (move >= Constants.ChooseColorMove && move < Constants.ChooseColorMove+4)
-        {
-            // Choose color
-            return ChooseColor && player == OnTurn;
-        }
         else
         {
-            Card card = PlayerHands[player][move];
-            if (OnTurn == player)
+            move = Utils.Mod(move, Constants.DeclareLastCardMove); // Declaring last card has no effect
+            move = Utils.Mod(move, Constants.PlayDoubleMove); // TODO: for now, playing 2 cards at the same time is not supported
+
+            if (player == BlockedPlayer || (ChooseColor && player != OnTurn) || (ChooseColor && (move < Constants.ChooseColorMove || move >= Constants.ChooseColorMove + 4)))
             {
-                if (NumToDraw > 0)
-                    return card.Value == LastPlayedCard.Value;
-                else
-                    return card.Color == LastPlayedCard.Color || card.Value == LastPlayedCard.Value || card.Color == CardColor.Wild;
+                return false;
+            }
+            else if (move == Constants.DrawCardMove)
+            {
+                // Draw card
+                return player == OnTurn;
+            }
+            else if (move == Constants.DeclareLastCardMove)
+            {
+                // Declare last card
+                return player == OnTurn && !DeclaredUno[player];
+            }
+            else if (move >= Constants.ChooseColorMove && move < Constants.ChooseColorMove + 4)
+            {
+                // Choose color
+                return ChooseColor && player == OnTurn;
             }
             else
             {
-                return card.Color == LastPlayedCard.Color && card.Value == LastPlayedCard.Value;
+                Card card = PlayerHands[player][move];
+                CardColor curColor = LastPlayedCard.Color == CardColor.Wild ? CurColor : LastPlayedCard.Color;
+                if (OnTurn == player)
+                {
+                    if (NumToDraw > 0)
+                        return card.Value == LastPlayedCard.Value;
+                    else if (LastPlayedCard.Color == CardColor.Wild)
+                    {
+                        return card.Color == CurColor || card.ValueType == LastPlayedCard.ValueType || card.Color == CardColor.Wild;
+                    }
+                    else
+                        return card.Color == LastPlayedCard.Color || card.Value == LastPlayedCard.Value || card.Color == CardColor.Wild;
+                }
+                else
+                {
+                    return card.Color == LastPlayedCard.Color && card.Value == LastPlayedCard.Value;
+                }
             }
         }
     }
@@ -216,6 +242,11 @@ public class Logic
         if (IsLegalMove(player, move))
         {
             MoveType moveType;
+            bool declaredLastCard = move >= Constants.DeclareLastCardMove;
+            move = Utils.Mod(move, Constants.DeclareLastCardMove);
+            bool playedDoubleMove = move >= Constants.PlayDoubleMove;
+            move = Utils.Mod(move, Constants.PlayDoubleMove);
+
             if (move == Constants.DrawCardMove)
             {
                 if (AlreadyDrewCard)
@@ -246,22 +277,23 @@ public class Logic
                 }
                 return new MakeMoveResult(true, moveType);
             }
-            else if (move == Constants.PlayDoubleMove)
-            {
-                // TODO: Play 2 cards simultaneously
-                return new MakeMoveResult(false, MoveType.PlayedCard);
-            }
-            else if (move == Constants.DeclareLastCardMove)
-            {
-                // Declare last card
-                DeclaredUno[player] = true;
-                return new MakeMoveResult(true, MoveType.DeclaredLastCard);
-            }
+            //else if (move == Constants.PlayDoubleMove)
+            //{
+            //    // TODO: Play 2 cards simultaneously
+            //    return new MakeMoveResult(false, MoveType.PlayedCard);
+            //}
+            //else if (move == Constants.DeclareLastCardMove)
+            //{
+            //    // Declare last card
+            //    DeclaredUno[player] = true;
+            //    return new MakeMoveResult(true, MoveType.DeclaredLastCard);
+            //}
             else if (move >= Constants.ChooseColorMove && move < Constants.ChooseColorMove + 4)
             {
                 // Choose color
                 ClearMove();
-                LastPlayedCard = new Card((CardColor)(move - Constants.ChooseColorMove), LastPlayedCard.ValueType);
+                // LastPlayedCard = new Card((CardColor)(move - Constants.ChooseColorMove), LastPlayedCard.ValueType);
+                CurColor = (CardColor)(move - Constants.ChooseColorMove);
                 ChooseColor = false;
                 OnTurn = Utils.Mod(player + Delta, NumPlayers);
                 return new MakeMoveResult(true, MoveType.ChoseColor);
@@ -318,11 +350,12 @@ public class Logic
                 OnTurn = Utils.Mod(player + deltaMult * Delta, NumPlayers);
 
                 bool refreshHand = false;
-                if ((DeclaredUno[player] && PlayerHands[player].Count != 1) || (!DeclaredUno[player] && PlayerHands[player].Count == 1))
+                if ((declaredLastCard && PlayerHands[player].Count != 1) || (!declaredLastCard && PlayerHands[player].Count == 1))
                 {
                     DrawCards(player, NumIlegalMoveDraw);
                     refreshHand = true;
                 }
+
                 return new MakeMoveResult(true, MoveType.PlayedCard)
                 {
                     EnableChooseColor = ChooseColor,
