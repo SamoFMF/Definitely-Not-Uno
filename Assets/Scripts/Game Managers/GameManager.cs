@@ -85,17 +85,37 @@ public class GameManager : MonoBehaviour
             ChooseColor.SetActive(false);
     }
 
+    private void SetPlayerHandSpacing(int player)
+    {
+        if (Utils.Mod(player, 2) == 1)
+            return; // TODO - temporary fix
+
+        int numCards = GameLogic.PlayerHands[player].Count;
+
+        GridLayoutGroup grid = PlayerHands[player].GetComponent<GridLayoutGroup>();
+
+        grid.spacing = new Vector2()
+        {
+            x = Mathf.Min(10f, (760f - 100 * numCards) / (numCards - 1)),
+            y = grid.spacing.y
+        };
+    }
+
     private void DisplayPlayerCards(int player)
     {
         foreach (Card card in GameLogic.PlayerHands[player])
         {
             _ = rm.GetCardPrefab(card.Id, CardPrefab, PlayerHands[player].transform, Players[player]);
         }
+
+        SetPlayerHandSpacing(player);
     }
 
     private void DestroyPlayerCard(int player, int cardIdx)
     {
         Destroy(PlayerHands[player].transform.GetChild(cardIdx).gameObject);
+
+        SetPlayerHandSpacing(player);
     }
 
     private void DestroyPlayerCards(int player)
@@ -192,10 +212,11 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                if (moveResult.MoveType == MoveType.ChoseColor)
-                    UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
-                else
-                    UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
+                //if (moveResult.MoveType == MoveType.ChoseColor)
+                //    UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+                //else
+                //    UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
+                UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
             }
         }
         else

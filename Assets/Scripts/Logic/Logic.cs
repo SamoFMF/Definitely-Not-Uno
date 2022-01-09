@@ -319,11 +319,6 @@ public class Logic
                 {
                     // Game Over: Player Wins
                     return EndGame(player);
-                    //return new MakeMoveResult(true, MoveType.PlayedCard)
-                    //{
-                    //    IsOver = true,
-                    //    Winner = player
-                    //};
                 }
                 else if (card.ValueType == CardValue.Skip)
                 {
@@ -362,6 +357,8 @@ public class Logic
                     DrawCards(player, NumIlegalMoveDraw);
                     refreshHand = true;
                 }
+
+                CurColor = LastPlayedCard.Color;
 
                 return new MakeMoveResult(true, MoveType.PlayedCard)
                 {
