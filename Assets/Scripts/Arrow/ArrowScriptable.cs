@@ -15,6 +15,6 @@ public class ArrowScriptable : ScriptableObject
 
     public override string ToString()
     {
-        return '(' + Color.ToString() + ')';
+        return '>' + Color.ToString() + '>';
     }
 } 

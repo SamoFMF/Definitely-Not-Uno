@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Color: 1
   ValueType: 8
-  Art: {fileID: 21300000, guid: 8130df37aef5573409d9623afb74ad49, type: 3}
+  Art: {fileID: 21300000, guid: 6abbbd56544e6bf4eadf1e747dc608e2, type: 3}

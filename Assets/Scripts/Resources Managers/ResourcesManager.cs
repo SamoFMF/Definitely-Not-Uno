@@ -21,6 +21,14 @@ public class ResourcesManager : ScriptableObject
         {
             IdToCard.Add(Deck[i].Id, Deck[i]);
         }
+
+        if (Arrows == null)
+            return;
+
+        for (int i = 0; i < Arrows.Length; i++)
+        {
+            ColorToArrow.Add(Arrows[i].Color, Arrows[i]);
+        }
     }
 
     public CardScriptable GetCardScriptable(int id)
@@ -43,6 +51,7 @@ public class ResourcesManager : ScriptableObject
 
     public void UpdateArrowDisplay(ArrowDisplay arrowDisplay, CardColor color)
     {
+        Debug.Log("color = " + color.ToString());
         ArrowScriptable arrow = GetArrowScriptable(color);
         arrowDisplay.LoadArrow(arrow);
     }

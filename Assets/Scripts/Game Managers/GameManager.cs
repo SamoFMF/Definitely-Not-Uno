@@ -73,11 +73,10 @@ public class GameManager : MonoBehaviour
 
         // Display last played
         UpdateLastPlayedCard();
-        
+
 
         // Update arrow
-        SetArrowDirection(GameLogic.OnTurn);
-        UpdateArrowDisplay(GameLogic.LastPlayedCard.Color);
+        UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
 
         // Enable ChooseCard if needed
         if (GameLogic.LastPlayedCard.Color == CardColor.Wild)
@@ -117,12 +116,9 @@ public class GameManager : MonoBehaviour
         rm.UpdateCardDisplay(LastPlayedCardDisplay, cardId);
     }
     
-    private void UpdateArrowDisplay(CardColor cardColor)
+    private void SetArrowDisplay(CardColor cardColor)
     {
-        //CardColor cardColor = GameLogic.LastPlayedCard.Color;
-
         rm.UpdateArrowDisplay(OnTurnArrow.GetComponent<ArrowDisplay>(), cardColor); 
-
     }
 
     private void SetArrowDirection(int player)
@@ -132,6 +128,12 @@ public class GameManager : MonoBehaviour
             OnTurnArrow.transform.eulerAngles.y,
             -(player + 1) * 90
         );
+    }
+
+    private void UpdateArrow(int player, CardColor cardColor)
+    {
+        SetArrowDisplay(cardColor);
+        SetArrowDirection(player);
     }
 
     private void UpdateScoreboard(int[] scores)
@@ -171,7 +173,10 @@ public class GameManager : MonoBehaviour
                 //DisplayPlayerCards(player);
             }
             else if (moveResult.MoveType == MoveType.ChoseColor)
+            {
                 ChooseColor.SetActive(false);
+                // UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+            }
 
             if (moveResult.RefreshHand)
                 UpdatePlayerHand(player);
@@ -187,9 +192,10 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                SetArrowDirection(GameLogic.OnTurn);
-                UpdateArrowDisplay(GameLogic.LastPlayedCard.Color);
-
+                if (moveResult.MoveType == MoveType.ChoseColor)
+                    UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+                else
+                    UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
             }
         }
         else
