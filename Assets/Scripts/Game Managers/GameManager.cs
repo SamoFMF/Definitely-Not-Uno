@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     public GameObject OnTurnArrow;
     public GameObject[] DeclareLastCards;
 
+
     private ResourcesManager rm;
     private Logic GameLogic;
     private CardDisplay LastPlayedCardDisplay;
@@ -72,9 +73,11 @@ public class GameManager : MonoBehaviour
 
         // Display last played
         UpdateLastPlayedCard();
+        
 
         // Update arrow
         SetArrowDirection(GameLogic.OnTurn);
+        UpdateArrowDisplay(GameLogic.LastPlayedCard.Color);
 
         // Enable ChooseCard if needed
         if (GameLogic.LastPlayedCard.Color == CardColor.Wild)
@@ -112,6 +115,14 @@ public class GameManager : MonoBehaviour
     {
         int cardId = GameLogic.LastPlayedCard.Id;
         rm.UpdateCardDisplay(LastPlayedCardDisplay, cardId);
+    }
+    
+    private void UpdateArrowDisplay(CardColor cardColor)
+    {
+        //CardColor cardColor = GameLogic.LastPlayedCard.Color;
+
+        rm.UpdateArrowDisplay(OnTurnArrow.GetComponent<ArrowDisplay>(), cardColor); 
+
     }
 
     private void SetArrowDirection(int player)
@@ -177,6 +188,8 @@ public class GameManager : MonoBehaviour
             else
             {
                 SetArrowDirection(GameLogic.OnTurn);
+                UpdateArrowDisplay(GameLogic.LastPlayedCard.Color);
+
             }
         }
         else

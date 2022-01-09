@@ -67,4 +67,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 10a7c2afb64a94b438e25f7dcf4346ff, type: 2}
   - {fileID: 11400000, guid: a305c0397bb657e47a7910aa4feb17f8, type: 2}
   - {fileID: 11400000, guid: 0165deb5332045a48a51a7989cdf9f0e, type: 2}
-  CardPrefab: {fileID: 4145482891662603425, guid: 6a2ab486e88961e4b95703e87ba05366, type: 3}
+  Arrows:
+  - {fileID: 11400000, guid: 8bc42570e60dd7e4b932cd06592c0e21, type: 2}
+  - {fileID: 11400000, guid: 171aa6d490ccbeb4d9166cedc53fc4d3, type: 2}
+  - {fileID: 11400000, guid: 4f1ae6258df5b56489bfb1442a1be794, type: 2}
+  - {fileID: 11400000, guid: 65eed305f540b6341bc6b795808e6593, type: 2}
+  - {fileID: 11400000, guid: e4338a16e8a74974a8600f89f626d625, type: 2}
