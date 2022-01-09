@@ -53,9 +53,6 @@ public class GameManager : MonoBehaviour
 
         NewGame();
 
-        Debug.Log("To play = " + GameLogic.OnTurn);
-        Debug.Log("Last played = " + GameLogic.LastPlayedCard);
-
         // Scoreboard
         Scores = new int[4];
     }
@@ -78,6 +75,12 @@ public class GameManager : MonoBehaviour
 
         // Update arrow
         SetArrowDirection(GameLogic.OnTurn);
+
+        // Enable ChooseCard if needed
+        if (GameLogic.LastPlayedCard.Color == CardColor.Wild)
+            ChooseColor.SetActive(true);
+        else
+            ChooseColor.SetActive(false);
     }
 
     private void DisplayPlayerCards(int player)
@@ -103,7 +106,6 @@ public class GameManager : MonoBehaviour
     {
         DestroyPlayerCards(player);
         DisplayPlayerCards(player);
-        Debug.Log("here");
     }
 
     private void UpdateLastPlayedCard()

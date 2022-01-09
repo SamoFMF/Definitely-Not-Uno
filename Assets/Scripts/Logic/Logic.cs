@@ -58,6 +58,7 @@ public class Logic
         Card card = Deck[Deck.Count - 1];
         DrawCards(OnTurn, 1);
         int move = PlayerHands[OnTurn].FindIndex(x => x.Color == card.Color && x.ValueType == card.ValueType);
+
         MakeMove(OnTurn, move);
         PlayedCards.RemoveAt(0); // Remove null from PlayedCards
     }
@@ -80,7 +81,7 @@ public class Logic
                 Deck.Add(card);
 
         // Update dealer
-        Dealer++;
+        Dealer = Utils.Mod(Dealer + 1, NumPlayers);
 
         return new MakeMoveResult(true, MoveType.PlayedCard)
         {
@@ -153,11 +154,17 @@ public class Logic
         for (int i = 0; i < numCards; i++)
         {
             if (Deck.Count == 0)
-                PlayedToDeck();
+            {
+                if (PlayedCards.Count == 0)
+                    break;
+                else
+                    PlayedToDeck();
+            }
 
             PlayerHands[player].Add(Deck[Deck.Count - 1]);
             Deck.RemoveAt(Deck.Count - 1);
         }
+
         SortHand(player);
     }
 
