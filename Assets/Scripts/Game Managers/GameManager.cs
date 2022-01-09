@@ -90,7 +90,7 @@ public class GameManager : MonoBehaviour
         if (Utils.Mod(player, 2) == 1)
             return; // TODO - temporary fix
 
-        int numCards = GameLogic.PlayerHands[player].Count;
+        int numCards = Mathf.Min(GameLogic.PlayerHands[player].Count, 12);
 
         GridLayoutGroup grid = PlayerHands[player].GetComponent<GridLayoutGroup>();
 
@@ -195,6 +195,8 @@ public class GameManager : MonoBehaviour
             else if (moveResult.MoveType == MoveType.ChoseColor)
             {
                 ChooseColor.SetActive(false);
+                foreach (HoverColor hoverColor in ChooseColor.GetComponentsInChildren<HoverColor>())
+                    hoverColor.SetLocalScale();
                 // UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
             }
 
