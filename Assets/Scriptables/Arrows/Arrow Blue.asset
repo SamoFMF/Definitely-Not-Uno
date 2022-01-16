@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea0be466f888bc34ca235fee2df31803, type: 3}
-  m_Name: GreenEight
+  m_Script: {fileID: 11500000, guid: b22c55f328a309f438daad4382389ee8, type: 3}
+  m_Name: Arrow Blue
   m_EditorClassIdentifier: 
-  Color: 1
-  ValueType: 8
-  Art: {fileID: 21300000, guid: 6abbbd56544e6bf4eadf1e747dc608e2, type: 3}
+  Color: 2
+  Art: {fileID: 21300000, guid: b9a04220379b95649bf21b308ad7b7a0, type: 3}

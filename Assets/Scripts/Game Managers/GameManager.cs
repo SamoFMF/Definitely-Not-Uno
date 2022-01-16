@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     public GameObject OnTurnArrow;
     public GameObject[] DeclareLastCards;
 
+
     private ResourcesManager rm;
     private Logic GameLogic;
     private CardDisplay LastPlayedCardDisplay;
@@ -73,8 +74,9 @@ public class GameManager : MonoBehaviour
         // Display last played
         UpdateLastPlayedCard();
 
+
         // Update arrow
-        SetArrowDirection(GameLogic.OnTurn);
+        UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
 
         // Enable ChooseCard if needed
         if (GameLogic.LastPlayedCard.Color == CardColor.Wild)
@@ -83,17 +85,37 @@ public class GameManager : MonoBehaviour
             ChooseColor.SetActive(false);
     }
 
+    private void SetPlayerHandSpacing(int player)
+    {
+        if (Utils.Mod(player, 2) == 1)
+            return; // TODO - temporary fix
+
+        int numCards = Mathf.Min(GameLogic.PlayerHands[player].Count, 12);
+
+        GridLayoutGroup grid = PlayerHands[player].GetComponent<GridLayoutGroup>();
+
+        grid.spacing = new Vector2()
+        {
+            x = Mathf.Min(10f, (760f - 100 * numCards) / (numCards - 1)),
+            y = grid.spacing.y
+        };
+    }
+
     private void DisplayPlayerCards(int player)
     {
         foreach (Card card in GameLogic.PlayerHands[player])
         {
             _ = rm.GetCardPrefab(card.Id, CardPrefab, PlayerHands[player].transform, Players[player]);
         }
+
+        SetPlayerHandSpacing(player);
     }
 
     private void DestroyPlayerCard(int player, int cardIdx)
     {
         Destroy(PlayerHands[player].transform.GetChild(cardIdx).gameObject);
+
+        SetPlayerHandSpacing(player);
     }
 
     private void DestroyPlayerCards(int player)
@@ -113,6 +135,11 @@ public class GameManager : MonoBehaviour
         int cardId = GameLogic.LastPlayedCard.Id;
         rm.UpdateCardDisplay(LastPlayedCardDisplay, cardId);
     }
+    
+    private void SetArrowDisplay(CardColor cardColor)
+    {
+        rm.UpdateArrowDisplay(OnTurnArrow.GetComponent<ArrowDisplay>(), cardColor); 
+    }
 
     private void SetArrowDirection(int player)
     {
@@ -121,6 +148,12 @@ public class GameManager : MonoBehaviour
             OnTurnArrow.transform.eulerAngles.y,
             -(player + 1) * 90
         );
+    }
+
+    private void UpdateArrow(int player, CardColor cardColor)
+    {
+        SetArrowDisplay(cardColor);
+        SetArrowDirection(player);
     }
 
     private void UpdateScoreboard(int[] scores)
@@ -160,7 +193,12 @@ public class GameManager : MonoBehaviour
                 //DisplayPlayerCards(player);
             }
             else if (moveResult.MoveType == MoveType.ChoseColor)
+            {
                 ChooseColor.SetActive(false);
+                foreach (HoverColor hoverColor in ChooseColor.GetComponentsInChildren<HoverColor>())
+                    hoverColor.SetLocalScale();
+                // UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+            }
 
             if (moveResult.RefreshHand)
                 UpdatePlayerHand(player);
@@ -176,7 +214,11 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                SetArrowDirection(GameLogic.OnTurn);
+                //if (moveResult.MoveType == MoveType.ChoseColor)
+                //    UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+                //else
+                //    UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
+                UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
             }
         }
         else

@@ -6,7 +6,9 @@ using UnityEngine;
 public class ResourcesManager : ScriptableObject
 {
     public CardScriptable[] Deck;
+    public ArrowScriptable[] Arrows;
     private Dictionary<int, CardScriptable> IdToCard = new Dictionary<int, CardScriptable>();
+    private Dictionary<CardColor, ArrowScriptable> ColorToArrow = new Dictionary<CardColor, ArrowScriptable>();
 
     public void Init()
     {
@@ -19,6 +21,14 @@ public class ResourcesManager : ScriptableObject
         {
             IdToCard.Add(Deck[i].Id, Deck[i]);
         }
+
+        if (Arrows == null)
+            return;
+
+        for (int i = 0; i < Arrows.Length; i++)
+        {
+            ColorToArrow.Add(Arrows[i].Color, Arrows[i]);
+        }
     }
 
     public CardScriptable GetCardScriptable(int id)
@@ -27,10 +37,23 @@ public class ResourcesManager : ScriptableObject
         return card;
     }
 
+    public ArrowScriptable GetArrowScriptable(CardColor color)
+    {
+        ColorToArrow.TryGetValue(color, out ArrowScriptable arrow);
+        return arrow;
+    }
+
     public void UpdateCardDisplay(CardDisplay cardDisplay, int id)
     {
         CardScriptable card = GetCardScriptable(id);
         cardDisplay.LoadCard(card);
+    }
+
+    public void UpdateArrowDisplay(ArrowDisplay arrowDisplay, CardColor color)
+    {
+        Debug.Log("color = " + color.ToString());
+        ArrowScriptable arrow = GetArrowScriptable(color);
+        arrowDisplay.LoadArrow(arrow);
     }
 
     public GameObject GetCardPrefab(int id, GameObject cardPrefab, Transform parent, Player player)
