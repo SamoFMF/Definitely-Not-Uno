@@ -1,98 +1,260 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
+using System;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject[] PlayerHands;
-    public GameObject CardPrefab;
-    public Player[] Players;
-    public GameObject LastPlayedCard;
-    public GameObject Deck;
     public GameObject ChooseColor;
     public GameObject OnTurnArrow;
-    public GameObject[] DeclareLastCards;
+    public GameObject DeclareLastCard;
+    public ServerManager ServerManager = null;
+    public GameObject PlayerHand;
+    public GameObject NewGameButton;
+    public GameObject GameScreen;
 
+    // Prefabs
+    public GameObject CardPrefab;
+    public GameObject OpponentHandPrefab;
+    public GameObject PlayerHandPrefab;
 
     private ResourcesManager rm;
-    private Logic GameLogic;
     private CardDisplay LastPlayedCardDisplay;
-    private int[] Scores;
+    private bool IsServer; // Override NetworkBehaviour.IsServer
+    private Player LocalPlayer = null;
 
-    // Start is called before the first frame update
-    void Start()
+    // Game related
+    private Dictionary<ulong, Player> PlayersInGame;
+    private Dictionary<ulong, GameObject> OpponentHands;
+    private int PlayerPos;
+
+    private Card LastPlayedCard;
+
+    public void Init(string mode)
     {
-        rm = Resources.Load<ResourcesManager>("Resources Managers/ResourcesManager");
-        rm.Init();
-        //rm.GetCardPrefab(7, CardPrefab, Player1Hand.transform);
-        //rm.GetCardPrefab(110, CardPrefab, Player1Hand.transform);
-        //rm.GetCardPrefab(307, CardPrefab, Player1Hand.transform);
-        //GameObject card = rm.GetCardPrefab(413, CardPrefab, Player1Hand.transform);
-        //card.transform.SetSiblingIndex(1);
+        IsServer = mode == "Server";
 
-        LastPlayedCardDisplay = LastPlayedCard.GetComponent<CardDisplay>();
-        ChooseColor.SetActive(false);
-
-        // Create game
-        GameLogic = new Logic(4, 0, new System.Random(), new LogicSettings());
-
-        // TODO - temporary
-        Deck.GetComponent<ClickDeck>().Players = Players;
-        ClickColor clickColor = ChooseColor.GetComponent<ClickColor>();
-        for (int i = 0; i < 4; i++)
-            ChooseColor.transform.GetChild(i).GetComponent<ClickColor>().Players = Players;
-        //ChooseColor.GetComponent<ClickColor>().Players = Players;
-
-        // Display cards
-        for (int player = 0; player < 4; player++)
+        if (IsServer)
         {
-            Players[player].GameManager = this;
+            Debug.Log("Init Game Manager: Server");
+        }
+        else
+        {
+            Debug.Log("Init Game Manager: Client");
+            rm = Resources.Load<ResourcesManager>("Resources Managers/ResourcesManager");
+            rm.Init();
 
-            // DisplayPlayerCards(player);
+            LastPlayedCardDisplay = GameObject.Find("LastPlayedCard").GetComponent<CardDisplay>();
+            ChooseColor.SetActive(false);
+
+            PlayersInGame = new Dictionary<ulong, Player>();
+        }
+    }
+
+    public void SetupServerManager(ServerManager serverManager)
+    {
+        ServerManager = serverManager;
+        serverManager.GameManager = this;
+
+        LastPlayedCard = ServerManager.LastPlayedCard.Value;
+
+        // Add server to LocalPlayer if it is already added
+        if (LocalPlayer != null) LocalPlayer.ServerManager = ServerManager;
+    }
+
+    private void OnDestroy()
+    {
+        if (IsServer)
+        {
+
+        }
+        else
+        {
+            // Unsubscribe from network variable changes
+            //LastPlayedCard.OnValueChanged -= UpdateLastPlayedCard;
+            //OnTurn.OnValueChanged -= UpdateOnTurnChanged;
+        }
+    }
+
+    public void UpdateChooseColor(bool previousValue, bool newValue)
+    {
+        ChooseColor.SetActive(newValue);
+    }
+
+    private void UpdateOnTurnChanged(int previousValue, int newValue)
+    {
+        int numPlayers = ServerManager.ConnectedPlayerIds.Count;
+        int player = Utils.Mod(newValue - PlayerPos, numPlayers);
+
+        SetArrowDirection(player, numPlayers);
+    }
+
+    private void UpdateLastPlayedCard(Card previousCard, Card newCard)
+    {
+        LastPlayedCard = newCard;
+        rm.UpdateCardDisplay(LastPlayedCardDisplay, newCard.Id);
+    }
+
+    private void SetArrowDisplay(CardColor previousValue, CardColor newValue)
+    {
+        rm.UpdateArrowDisplay(OnTurnArrow.GetComponent<ArrowDisplay>(), newValue);
+    }
+
+    private void SetArrowDirection(int player, int numPlayers)
+    {
+        OnTurnArrow.transform.eulerAngles = new Vector3(
+            OnTurnArrow.transform.eulerAngles.x,
+            OnTurnArrow.transform.eulerAngles.y,
+            -90 - player * (360 / numPlayers)
+        );
+    }
+
+    public void StartGameClick()
+    {
+        NewGameButton.SetActive(false);
+
+        ServerManager.StartGameServerRpc();
+    }
+
+    public void NewGame(ulong localId)
+    {
+        // Subscribe to Server variable changes
+        ServerManager.LastPlayedCard.OnValueChanged += UpdateLastPlayedCard;
+        ServerManager.OnTurn.OnValueChanged += UpdateOnTurnChanged;
+        ServerManager.CurrentColor.OnValueChanged += SetArrowDisplay;
+
+        // Subscribe to Local player variable changes
+        LocalPlayer.NumCardsInHand.OnValueChanged += UpdateNumCardsPlayer;
+        LocalPlayer.Score.OnValueChanged += UpdateScore;
+        LocalPlayer.ChooseColor.OnValueChanged += UpdateChooseColor;
+
+        // Set starting values
+        UpdateLastPlayedCard(ServerManager.LastPlayedCard.Value, ServerManager.LastPlayedCard.Value);
+        UpdateOnTurnChanged(ServerManager.OnTurn.Value, ServerManager.OnTurn.Value);
+        SetArrowDisplay(ServerManager.CurrentColor.Value, ServerManager.CurrentColor.Value);
+
+        // Set local player position
+        PlayerPos = ServerManager.PlayerPositions[localId];
+
+        ulong clientId;
+        Player player;
+        NetworkObject networkObject;
+        OpponentHands = new Dictionary<ulong, GameObject>();
+        foreach (KeyValuePair<ulong, Player> entry in PlayersInGame)
+        {
+            clientId = entry.Key;
+            if (clientId == localId)
+                continue;
+
+            player = entry.Value;
+
+            // Subscribe to opponents variable changes
+            // player.NumCardsInHand.OnValueChanged += UpdateNumCardsOpponent;
+            player.Score.OnValueChanged += UpdateScore;
+
+            AddOpponentHand(player, clientId);
+        }
+    }
+
+    private void AddOpponentHand(Player player, ulong playerId)
+    {
+        int opponentPos = ServerManager.PlayerPositions[playerId];
+        int numOpponents = ServerManager.ConnectedPlayerIds.Count - 1;
+        // Vector3 pos = GetOpponentPosition(Utils.Mod(opponentPos - playerPos, numOpponents), ServerManager.ConnectedPlayerIds.Count - 1);
+
+        GameObject opponentHand = Instantiate(OpponentHandPrefab, GameScreen.transform);
+        opponentHand.transform.localPosition = GetOpponentPosition(opponentPos > PlayerPos ? opponentPos - PlayerPos - 1 : Utils.Mod(opponentPos - PlayerPos, numOpponents),
+            ServerManager.ConnectedPlayerIds.Count - 1);
+
+        OpponentHands.Add(playerId, opponentHand);
+
+        opponentHand.GetComponent<OpponentHandDisplay>().SubscribeToUpdates(player);
+    }
+
+    private Vector3 GetOpponentPosition(int pos, int numOpponents)
+    {
+        int x = 0;
+        int y = 0;
+        if (numOpponents == 1)
+        {
+            x = 0;
+            y = 250;
+        }
+        else if (numOpponents == 2)
+        {
+            x = (pos * 2 - 1) * 550;
+            y = 250;
+        }
+        else if (numOpponents == 3)
+        {
+            x = (pos - 1) * 550;
+            y = pos == 1 ? 250 : 0;
+        }
+        // TODO: more opponents
+
+        return new Vector3(x, y, 0);
+    }
+
+    public void AddOpponent(Player opponent)
+    {
+        ulong opponentId = opponent.OwnerClientId;
+
+        PlayersInGame.Add(opponentId, opponent);
+    }
+
+    private void UpdateScore(int previousValue, int newValue)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void UpdateNumCardsPlayer(int previousValue, int newValue)
+    {
+        LocalPlayer.RequestPlayerHand();
+    }
+
+    public void OnConnectLocalPlayer(Player player)
+    {
+        LocalPlayer = player;
+    }
+
+    public void UpdateHand()
+    {
+        DestroyPlayerCards();
+        DisplayPlayerCards();
+    }
+
+    private void DisplayPlayerCards()
+    {
+        int cardId;
+        for (int i = 0; i < LocalPlayer.Hand.Count; i++)
+        {
+            cardId = LocalPlayer.Hand[i];
+            _ = rm.GetCardPrefab(cardId, CardPrefab, PlayerHand.transform, this);
         }
 
-        NewGame();
-
-        // Scoreboard
-        Scores = new int[4];
+        SetPlayerHandSpacing();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void DestroyPlayerCard(int cardIdx)
     {
-        
+        Destroy(PlayerHand.transform.GetChild(cardIdx).gameObject);
+
+        SetPlayerHandSpacing();
     }
 
-    public void NewGame()
+    private void DestroyPlayerCards()
     {
-        GameLogic.NewGame();
-
-        for (int player = 0; player < GameLogic.NumPlayers; player++)
-            UpdatePlayerHand(player);
-
-        // Display last played
-        UpdateLastPlayedCard();
-
-
-        // Update arrow
-        UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
-
-        // Enable ChooseCard if needed
-        if (GameLogic.LastPlayedCard.Color == CardColor.Wild)
-            ChooseColor.SetActive(true);
-        else
-            ChooseColor.SetActive(false);
+        for (int i = 0; i < PlayerHand.transform.childCount; i++)
+            DestroyPlayerCard(i);
     }
 
-    private void SetPlayerHandSpacing(int player)
+    private void SetPlayerHandSpacing()
     {
-        if (Utils.Mod(player, 2) == 1)
-            return; // TODO - temporary fix
+        int numCards = Mathf.Min(LocalPlayer.Hand.Count, 12);
 
-        int numCards = Mathf.Min(GameLogic.PlayerHands[player].Count, 12);
-
-        GridLayoutGroup grid = PlayerHands[player].GetComponent<GridLayoutGroup>();
+        GridLayoutGroup grid = PlayerHand.GetComponent<GridLayoutGroup>();
 
         grid.spacing = new Vector2()
         {
@@ -101,129 +263,49 @@ public class GameManager : MonoBehaviour
         };
     }
 
-    private void DisplayPlayerCards(int player)
+    public void MakeMove(int move)
     {
-        foreach (Card card in GameLogic.PlayerHands[player])
-        {
-            _ = rm.GetCardPrefab(card.Id, CardPrefab, PlayerHands[player].transform, Players[player]);
-        }
+        int moveModifiers = DeclareLastCard.GetComponent<Toggle>().isOn ? Constants.DeclareLastCardMove : 0;
 
-        SetPlayerHandSpacing(player);
+        LocalPlayer.MakeMove(move + moveModifiers);
     }
 
-    private void DestroyPlayerCard(int player, int cardIdx)
+    public void MakeMoveResponse(MakeMoveResult moveResult)
     {
-        Destroy(PlayerHands[player].transform.GetChild(cardIdx).gameObject);
-
-        SetPlayerHandSpacing(player);
-    }
-
-    private void DestroyPlayerCards(int player)
-    {
-        for (int i = 0; i < PlayerHands[player].transform.childCount; i++)
-            DestroyPlayerCard(player, i);
-    }
-
-    private void UpdatePlayerHand(int player)
-    {
-        DestroyPlayerCards(player);
-        DisplayPlayerCards(player);
-    }
-
-    private void UpdateLastPlayedCard()
-    {
-        int cardId = GameLogic.LastPlayedCard.Id;
-        rm.UpdateCardDisplay(LastPlayedCardDisplay, cardId);
-    }
-    
-    private void SetArrowDisplay(CardColor cardColor)
-    {
-        rm.UpdateArrowDisplay(OnTurnArrow.GetComponent<ArrowDisplay>(), cardColor); 
-    }
-
-    private void SetArrowDirection(int player)
-    {
-        OnTurnArrow.transform.eulerAngles = new Vector3(
-            OnTurnArrow.transform.eulerAngles.x,
-            OnTurnArrow.transform.eulerAngles.y,
-            -(player + 1) * 90
-        );
-    }
-
-    private void UpdateArrow(int player, CardColor cardColor)
-    {
-        SetArrowDisplay(cardColor);
-        SetArrowDirection(player);
-    }
-
-    private void UpdateScoreboard(int[] scores)
-    {
-        for (int player = 0; player < GameLogic.NumPlayers; player++)
-        {
-            Scores[player] += scores[player];
-            Debug.Log("Player " + player + ": " + scores[player] + " -> " + Scores[player]);
-        }
-    }
-
-    public void MakeMove(int player, int move)
-    {
-        Card card = null;
-        if (move < 200)
-            card = GameLogic.PlayerHands[player][move];
-
-        int moveModifiers = DeclareLastCards[player].GetComponent<Toggle>().isOn ? Constants.DeclareLastCardMove : 0;
-        Debug.Log("Player move: " + (move + moveModifiers));
-        MakeMoveResult moveResult = GameLogic.MakeMove(player, move + moveModifiers);
         if (moveResult.IsValid)
         {
-            if (moveModifiers > 0)
-                DeclareLastCards[player].GetComponent<Toggle>().isOn = false;
+            Toggle toggle = DeclareLastCard.GetComponent<Toggle>();
+            if (toggle.isOn)
+                toggle.isOn = false;
 
-            Debug.Log("Move (" + player + "," + move + "," + card + ") is VALID");
             if (moveResult.MoveType == MoveType.PlayedCard)
             {
-                //Destroy(PlayerHands[player].transform.GetChild(move).gameObject);
-                DestroyPlayerCard(player, move);
                 if (moveResult.EnableChooseColor)
                     ChooseColor.SetActive(true);
-            }
-            else if (moveResult.MoveType == MoveType.DrewCard) // Now handled in moveResult.RefreshHand
-            {
-                //DestroyPlayerCards(player);
-                //DisplayPlayerCards(player);
             }
             else if (moveResult.MoveType == MoveType.ChoseColor)
             {
                 ChooseColor.SetActive(false);
                 foreach (HoverColor hoverColor in ChooseColor.GetComponentsInChildren<HoverColor>())
                     hoverColor.SetLocalScale();
-                // UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
             }
+            else if (moveResult.MoveType == MoveType.DrewCard)
+            {
 
-            if (moveResult.RefreshHand)
-                UpdatePlayerHand(player);
+            }
+            else if (moveResult.MoveType == MoveType.EndedTurn)
+            {
 
-            UpdateLastPlayedCard();
+            }
 
             if (moveResult.IsOver)
             {
-                Debug.Log("Winner = " + moveResult.Winner);
-                UpdateScoreboard(moveResult.Scores);
-
-                NewGame();
+                // TODO
             }
             else
             {
-                //if (moveResult.MoveType == MoveType.ChoseColor)
-                //    UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
-                //else
-                //    UpdateArrow(GameLogic.OnTurn, GameLogic.LastPlayedCard.Color);
-                UpdateArrow(GameLogic.OnTurn, GameLogic.CurColor);
+                // TODO (maybe update arrow?)
             }
-        }
-        else
-        {
-            Debug.Log("Move (" + player + "," + move + "," + card + ") is NOT VALID");
         }
     }
 }

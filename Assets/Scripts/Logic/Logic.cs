@@ -54,13 +54,13 @@ public class Logic
         DealCards();
 
         // First (forced) move
-        LastPlayedCard = null;
+        LastPlayedCard = new Card(CardColor.Blue, CardValue.Zero); // Temporary card
         Card card = Deck[Deck.Count - 1];
         DrawCards(OnTurn, 1);
         int move = PlayerHands[OnTurn].FindIndex(x => x.Color == card.Color && x.ValueType == card.ValueType);
 
-        MakeMove(OnTurn, move);
-        PlayedCards.RemoveAt(0); // Remove null from PlayedCards
+        MakeMove(OnTurn, move, true);
+        PlayedCards.RemoveAt(0); // Remove temporary card from PlayedCards
     }
 
     private MakeMoveResult EndGame(int winner)
@@ -193,9 +193,9 @@ public class Logic
         AlreadyDrewCard = false;
     }
 
-    private bool IsLegalMove(int player, int move)
+    private bool IsLegalMove(int player, int move, bool forced = false)
     {
-        if (LastPlayedCard == null)
+        if (forced)
             return true;
         else
         {
@@ -244,9 +244,9 @@ public class Logic
         }
     }
 
-    public MakeMoveResult MakeMove(int player, int move)
+    public MakeMoveResult MakeMove(int player, int move, bool forced = false)
     {
-        if (IsLegalMove(player, move))
+        if (IsLegalMove(player, move, forced))
         {
             MoveType moveType;
             bool declaredLastCard = move >= Constants.DeclareLastCardMove;

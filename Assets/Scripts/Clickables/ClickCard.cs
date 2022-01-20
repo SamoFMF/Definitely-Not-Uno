@@ -5,12 +5,12 @@ using UnityEngine.EventSystems;
 
 public class ClickCard : Clickable
 {
-    public Player Player;
+    public GameManager GameManager;
 
     public override void OnPointerClick(PointerEventData eventData)
     {
         int move = transform.GetSiblingIndex();
 
-        Player.MakeMove(move);
+        GameManager.MakeMove(move);
     }
 }

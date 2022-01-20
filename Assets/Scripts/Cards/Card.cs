@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
+using Unity.Netcode;
 
-public class Card
+public struct Card : INetworkSerializable, IEquatable<Card>
 {
     //public enum CardColor { Red, Green, Blue, Yellow, Wild };
     //public enum CardValue { Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Skip, Reverse, TakeTwo, ChangeColor, TakeFour };
@@ -21,5 +20,16 @@ public class Card
     public override string ToString()
     {
         return '(' + Color.ToString() + ", " + Value + ')';
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Color);
+        serializer.SerializeValue(ref ValueType);
+    }
+
+    public bool Equals(Card other)
+    {
+        return Color == other.Color && ValueType == other.ValueType;
     }
 }

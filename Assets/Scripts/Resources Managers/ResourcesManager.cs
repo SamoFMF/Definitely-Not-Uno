@@ -56,13 +56,13 @@ public class ResourcesManager : ScriptableObject
         arrowDisplay.LoadArrow(arrow);
     }
 
-    public GameObject GetCardPrefab(int id, GameObject cardPrefab, Transform parent, Player player)
+    public GameObject GetCardPrefab(int id, GameObject cardPrefab, Transform parent, GameManager gameManager)
     {
         CardScriptable card = GetCardScriptable(id);
         GameObject cardObject = Instantiate(cardPrefab, parent);
         CardDisplay cardDisplay = cardObject.GetComponent<CardDisplay>();
         cardDisplay.LoadCard(card);
-        cardObject.GetComponent<ClickCard>().Player = player;
+        cardObject.GetComponent<ClickCard>().GameManager = gameManager;
 
         //Debug.Log(card + " " + cardObject.GetComponent<CardDisplay>().Card);
 

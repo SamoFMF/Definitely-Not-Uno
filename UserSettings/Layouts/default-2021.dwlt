@@ -48,7 +48,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 200}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 16
+  controlID: 87
 --- !u!114 &3
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -68,8 +68,8 @@ MonoBehaviour:
     y: 0
     width: 606
     height: 1307
-  m_MinSize: {x: 276, y: 71}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}
@@ -111,7 +111,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 1
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: ProjectBrowser
+  m_Name: ConsoleWindow
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -120,14 +120,14 @@ MonoBehaviour:
     y: 774
     width: 1954
     height: 533
-  m_MinSize: {x: 231, y: 271}
-  m_MaxSize: {x: 10001, y: 10021}
-  m_ActualView: {fileID: 12}
+  m_MinSize: {x: 101, y: 121}
+  m_MaxSize: {x: 4001, y: 4021}
+  m_ActualView: {fileID: 17}
   m_Panes:
   - {fileID: 12}
   - {fileID: 17}
-  m_Selected: 0
-  m_LastSelected: 1
+  m_Selected: 1
+  m_LastSelected: 0
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -223,7 +223,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 200}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 17
+  controlID: 51
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -248,7 +248,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 18
+  controlID: 52
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -315,24 +315,24 @@ MonoBehaviour:
     m_SceneHandles: 
     m_ShowAllHits: 0
     m_SkipHidden: 0
-    m_SearchArea: 1
+    m_SearchArea: 0
     m_Folders:
-    - Assets
+    - Assets/Scripts/Game Managers
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets
+  - Assets/Scripts/Game Managers
   m_LastFoldersGridSize: -1
-  m_LastProjectPath: C:\Users\ugmaj\Documents\GitHub\Definitely-Not-Uno
+  m_LastProjectPath: D:\Unity Projects\Definitely Not Uno
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 225f0000
-    m_LastClickedID: 24354
-    m_ExpandedIDs: 00000000225f000000ca9a3bffffff7f
+    scrollPos: {x: 0, y: 88}
+    m_SelectedIDs: d0700000
+    m_LastClickedID: 28880
+    m_ExpandedIDs: 000000001c6400001e64000020640000226400002464000026640000286400002a6400002c6400002e640000ac640000766b00008c6b00009a7100005a76000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -348,7 +348,7 @@ MonoBehaviour:
       m_IsRenaming: 0
       m_OriginalEventType: 11
       m_IsRenamingFilename: 1
-      m_ClientGUIView: {fileID: 0}
+      m_ClientGUIView: {fileID: 5}
     m_SearchString: 
     m_CreateAssetUtility:
       m_EndAction: {fileID: 0}
@@ -360,7 +360,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000225f0000
+    m_ExpandedIDs: 000000001c6400001e64000020640000226400002464000026640000286400002a6400002c6400002e640000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -385,9 +385,9 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 
-    m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 0
+    m_SelectedInstanceIDs: c6100000
+    m_LastClickedInstanceID: 4294
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c6230000c0680000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
@@ -490,7 +490,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 16fbffff
+      m_ExpandedIDs: bc7ffeff0080feffdc81feff328efeff768efeff5290feff8ea1feffd2a1feffaea3feffbcb1feff00b2feffdcb3feff0ab8feff4eb8feff2abafeff90bdfeffd4bdfeffb0bffeff66c3feffaac3feff86c5fefff2cbfeff36ccfeff12cefeff48d4feff96d4feff6ed6feff5ad9feff60d9fefffce3feff40e4feff1ee6feffdeebfeff22ecfefffcedfeffdef4feff2cf5feff06f7feff50fffeffe406ffff2807ffff0209ffffb211fffff611ffffd013ffff8a34ffffce34ffffa636ffff343affff783affff503cffff3e40ffff8240ffff5642ffffb245fffff645ffffce47ffffae4bfffff24bffffca4dffffee55ffff3256ffff0a58ffff925affffd65affffae5cffff1862ffff5c62ffff3464ffff6668ffffaa68ffff826affff3272ffff7672ffff4e74ffff5277ffff9677ffff6e79ffff407dffff847dffff607fffff8687ffffca87ffffa289ffffb090fffff490ffffcc92ffffb6a0fffffaa0ffffd2a2ffff78a6ffffbca6ffff94a8ffff24acffff68acffff40aeffff7ab4ffffbeb4ffff96b6fffffcb8ffff40b9ffff18bbffff72bdffffb6bdffff8ebffffff2c1ffff36c2ffff0ec4ffff96ccffffdaccffffb2ceffff46d5ffff8ad5ffff62d7ffff20dcffff64dcffff3cdeffffd4e1ffff18e2fffff0e3ffff68ebffffacebffff84edffff1ef2ffff62f2ffff3af4ffff14fbffff6e62000072620000926200001085000014850000348500005a1a01005e1a01007e1a01007a2c01007e2c01009e2c0100bc650100c0650100e06501000a7a01000e7a01002e7a01007e81010082810100a2810100488e01004c8e01006c8e0100ce950100d2950100f2950100529d0100569d0100769d01005aa801005ea801007ea801008eaf010092af0100acaf0100
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -761,9 +761,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 610.4684, y: 351.77713, z: 77.895905}
+    m_Target: {x: 598.5806, y: 365.42938, z: -2.3169188}
     speed: 2
-    m_Value: {x: 610.4684, y: 351.77713, z: 77.895905}
+    m_Value: {x: 598.5806, y: 365.42938, z: -2.3169188}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -814,9 +814,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 408.67593
+    m_Target: 446.97467
     speed: 2
-    m_Value: 408.67593
+    m_Value: 446.97467
   m_Ortho:
     m_Target: 1
     speed: 2
@@ -890,10 +890,10 @@ MonoBehaviour:
     m_VRangeLocked: 0
     hZoomLockedByDefault: 0
     vZoomLockedByDefault: 0
-    m_HBaseRangeMin: -669.5
-    m_HBaseRangeMax: 669.5
-    m_VBaseRangeMin: -376.5
-    m_VBaseRangeMax: 376.5
+    m_HBaseRangeMin: -650.5
+    m_HBaseRangeMax: 650.5
+    m_VBaseRangeMin: -366
+    m_VBaseRangeMax: 366
     m_HAllowExceedBaseRangeMin: 1
     m_HAllowExceedBaseRangeMax: 1
     m_VAllowExceedBaseRangeMin: 1
@@ -910,11 +910,11 @@ MonoBehaviour:
     m_DrawArea:
       serializedVersion: 2
       x: 0
-      y: 0
+      y: 21
       width: 1468
-      height: 753
+      height: 732
     m_Scale: {x: 1, y: 1}
-    m_Translation: {x: 734, y: 376.5}
+    m_Translation: {x: 734, y: 366}
     m_MarginLeft: 0
     m_MarginRight: 0
     m_MarginTop: 0
@@ -922,9 +922,9 @@ MonoBehaviour:
     m_LastShownAreaInsideMargins:
       serializedVersion: 2
       x: -734
-      y: -376.5
+      y: -366
       width: 1468
-      height: 753
+      height: 732
     m_MinimalGUI: 1
   m_defaultScale: 1
   m_LastWindowPixelSize: {x: 1468, y: 753}

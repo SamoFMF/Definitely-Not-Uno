@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 public class ClickDeclareLastCard : Clickable
 {
-    public Player Player;
+    public PlayerScriptable Player;
 
     public override void OnPointerClick(PointerEventData eventData)
     {
