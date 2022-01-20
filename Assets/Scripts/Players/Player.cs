@@ -36,20 +36,28 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public override void OnDestroy()
+    {
+        base.OnDestroy();
+    }
+
     public void SetupServerManager(ServerManager serverManager)
     {
         ServerManager = serverManager;
         ServerManager.LocalPlayer = this;
-        ServerManager.AddPlayerServerRpc();
+        ServerManager.AddPlayerServerRpc(NetworkManager.Singleton.LocalClient.PlayerObject);
     }
 
     public void StartNewGame()
     {
         GameManager.NewGame(NetworkManager.Singleton.LocalClientId);
 
-        // ServerManager.ChooseColor.OnValueChanged += UpdateChooseColor;
+        // RequestPlayerHand();
+    }
 
-       //  UpdateChooseColor(false, ServerManager.ChooseColor.Value);
+    public void StartNewRound()
+    {
+        GameManager.NewRound();
 
         RequestPlayerHand();
     }
@@ -99,5 +107,10 @@ public class Player : NetworkBehaviour
     public void UpdateChooseColor(bool isOn)
     {
         ChooseColor.Value = isOn;
+    }
+
+    public void UpdateScore(int n)
+    {
+        Score.Value += n;
     }
 }

@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour
         if (LocalPlayer != null) LocalPlayer.ServerManager = ServerManager;
     }
 
-    private void OnDestroy()
+    public void OnDestroy()
     {
         if (IsServer)
         {
@@ -85,7 +85,7 @@ public class GameManager : MonoBehaviour
 
     private void UpdateOnTurnChanged(int previousValue, int newValue)
     {
-        int numPlayers = ServerManager.ConnectedPlayerIds.Count;
+        int numPlayers = ServerManager.ConnectedPlayerObjects.Count;
         int player = Utils.Mod(newValue - PlayerPos, numPlayers);
 
         SetArrowDirection(player, numPlayers);
@@ -130,43 +130,59 @@ public class GameManager : MonoBehaviour
         LocalPlayer.Score.OnValueChanged += UpdateScore;
         LocalPlayer.ChooseColor.OnValueChanged += UpdateChooseColor;
 
+        // Set local player position
+        PlayerPos = ServerManager.PlayerPositions[localId];
+
+        ulong playerId;
+        Player player;
+        NetworkObject networkObject;
+        OpponentHands = new Dictionary<ulong, GameObject>();
+        for (int i = 0; i < ServerManager.ConnectedPlayerObjects.Count; i++)
+        {
+            networkObject = ServerManager.ConnectedPlayerObjects[i];
+            playerId = networkObject.OwnerClientId;
+            if (playerId == localId)
+                continue;
+
+            player = networkObject.GetComponent<Player>();
+
+            player.Score.OnValueChanged += UpdateScore;
+
+            AddOpponentHand(player, playerId);
+        }
+
+        //foreach (KeyValuePair<ulong, Player> entry in PlayersInGame)
+        //{
+        //    clientId = entry.Key;
+        //    if (clientId == localId)
+        //        continue;
+
+        //    player = entry.Value;
+
+        //    // Subscribe to opponents variable changes
+        //    player.Score.OnValueChanged += UpdateScore;
+
+        //    AddOpponentHand(player, clientId);
+        //}
+    }
+
+    public void NewRound()
+    {
         // Set starting values
         UpdateLastPlayedCard(ServerManager.LastPlayedCard.Value, ServerManager.LastPlayedCard.Value);
         UpdateOnTurnChanged(ServerManager.OnTurn.Value, ServerManager.OnTurn.Value);
         SetArrowDisplay(ServerManager.CurrentColor.Value, ServerManager.CurrentColor.Value);
-
-        // Set local player position
-        PlayerPos = ServerManager.PlayerPositions[localId];
-
-        ulong clientId;
-        Player player;
-        NetworkObject networkObject;
-        OpponentHands = new Dictionary<ulong, GameObject>();
-        foreach (KeyValuePair<ulong, Player> entry in PlayersInGame)
-        {
-            clientId = entry.Key;
-            if (clientId == localId)
-                continue;
-
-            player = entry.Value;
-
-            // Subscribe to opponents variable changes
-            // player.NumCardsInHand.OnValueChanged += UpdateNumCardsOpponent;
-            player.Score.OnValueChanged += UpdateScore;
-
-            AddOpponentHand(player, clientId);
-        }
     }
 
     private void AddOpponentHand(Player player, ulong playerId)
     {
         int opponentPos = ServerManager.PlayerPositions[playerId];
-        int numOpponents = ServerManager.ConnectedPlayerIds.Count - 1;
+        int numOpponents = ServerManager.ConnectedPlayerObjects.Count - 1;
         // Vector3 pos = GetOpponentPosition(Utils.Mod(opponentPos - playerPos, numOpponents), ServerManager.ConnectedPlayerIds.Count - 1);
 
         GameObject opponentHand = Instantiate(OpponentHandPrefab, GameScreen.transform);
         opponentHand.transform.localPosition = GetOpponentPosition(opponentPos > PlayerPos ? opponentPos - PlayerPos - 1 : Utils.Mod(opponentPos - PlayerPos, numOpponents),
-            ServerManager.ConnectedPlayerIds.Count - 1);
+            ServerManager.ConnectedPlayerObjects.Count - 1);
 
         OpponentHands.Add(playerId, opponentHand);
 
@@ -197,12 +213,12 @@ public class GameManager : MonoBehaviour
         return new Vector3(x, y, 0);
     }
 
-    public void AddOpponent(Player opponent)
-    {
-        ulong opponentId = opponent.OwnerClientId;
+    //public void AddOpponent(Player opponent)
+    //{
+    //    ulong opponentId = opponent.OwnerClientId;
 
-        PlayersInGame.Add(opponentId, opponent);
-    }
+    //    PlayersInGame.Add(opponentId, opponent);
+    //}
 
     private void UpdateScore(int previousValue, int newValue)
     {

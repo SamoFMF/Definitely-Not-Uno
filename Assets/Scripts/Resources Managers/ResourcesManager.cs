@@ -33,13 +33,15 @@ public class ResourcesManager : ScriptableObject
 
     public CardScriptable GetCardScriptable(int id)
     {
-        IdToCard.TryGetValue(id, out CardScriptable card);
+        if (!IdToCard.TryGetValue(id, out CardScriptable card))
+            return null;
         return card;
     }
 
     public ArrowScriptable GetArrowScriptable(CardColor color)
     {
-        ColorToArrow.TryGetValue(color, out ArrowScriptable arrow);
+        if (!ColorToArrow.TryGetValue(color, out ArrowScriptable arrow))
+            return null;
         return arrow;
     }
 
